@@ -1,0 +1,15 @@
+.DS_Store
+
+.sass-cache
+bower_components
+node_modules
+
+
+# Dev related stuff
+/nota-cli.sublime-project
+/nota-cli.sublime-workspace
+
+.vagrant/
+/*.pdf
+npm-debug.log
+webrender
