@@ -21,22 +21,10 @@
   Nota = require('nota');
 
   NotaCLI = (function() {
-    NotaCLI.prototype.logPrefix = chalk.gray('nota ');
-
-    NotaCLI.prototype.clientPrefix = chalk.gray('nota-client ');
-
-    function NotaCLI(logChannels) {
-      this.logClientError = __bind(this.logClientError, this);
-      this.logClient = __bind(this.logClient, this);
-      this.logEvent = __bind(this.logEvent, this);
-      this.logError = __bind(this.logError, this);
-      this.logWarning = __bind(this.logWarning, this);
-      this.log = __bind(this.log, this);
+    function NotaCLI() {
       this.listTemplatesIndex = __bind(this.listTemplatesIndex, this);
-      if (logChannels != null) {
-        this.log = logChannels.log, this.logEvent = logChannels.logEvent, this.logError = logChannels.logError, this.logWarning = logChannels.logWarning;
-      }
-      this.helper = new Nota.TemplateHelper(this.logWarning);
+      this.logging = new Nota.LoggingChannels(this.options);
+      this.helper = new Nota.TemplateHelper(this.logging.logWarning);
       nomnom.options({
         template: {
           position: 0,
@@ -81,7 +69,7 @@
           help: 'Print version',
           callback: (function(_this) {
             return function() {
-              return _this.meta.version;
+              return Nota.meta.version;
             };
           })(this)
         },
@@ -97,30 +85,22 @@
     }
 
     NotaCLI.prototype.start = function() {
-      var e, logChannels;
+      var e;
       try {
         this.options = this.parseOptions(nomnom.nom(), Nota.defaults);
       } catch (_error) {
         e = _error;
-        this.logError(e);
+        this.logging.logError(e);
         return;
       }
-      logChannels = {
-        log: this.log,
-        logEvent: this.logEvent,
-        logWarning: this.logWarning,
-        logError: this.logError,
-        logClient: this.logClient,
-        logClientError: this.logClientError
-      };
-      this.server = new Nota(this.options, logChannels);
-      return this.server.start().then((function(_this) {
+      this.nota = new Nota(this.options, this.logging);
+      return this.nota.start().then((function(_this) {
         return function() {
           if (_this.options.preview) {
-            open(_this.server.url());
+            open(_this.nota.server.url());
           }
           if (_this.options.listen) {
-            return open(_this.server.webrenderUrl());
+            return open(_this.nota.server.webrenderUrl());
           } else {
             return _this.render(_this.options);
           }
@@ -135,7 +115,7 @@
         outputPath: options.outputPath,
         preserve: options.preserve
       };
-      return this.server.queue(job).then((function(_this) {
+      return this.nota.queue(job).then((function(_this) {
         return function(meta) {
           if (options.logging.notify) {
             notifier.on('click', function() {
@@ -154,7 +134,7 @@
               wait: true
             });
           }
-          _this.server.close();
+          _this.nota.close();
           return process.exit();
         };
       })(this));
@@ -202,7 +182,7 @@
         _.extend(options.template, definition);
       } catch (_error) {
         e = _error;
-        this.logWarning(e);
+        this.logging.logWarning(e);
         options.template = {
           name: options.templatePath,
           path: templatePath
@@ -214,65 +194,38 @@
     };
 
     NotaCLI.prototype.listTemplatesIndex = function() {
-      var definition, dir, fold, headerDir, headerName, index, lengths, name, templates;
+      var basepath, definition, fold, headerName, headerPath, index, lengths, name, path, templates;
       templates = [];
-      index = this.helper.getTemplatesIndex(Nota.defaults.templatesPath);
+      basepath = Path.resolve(__dirname, '..', Nota.defaults.templatesPath);
+      index = this.helper.getTemplatesIndex(basepath);
       if (_.size(index) === 0) {
-        this.logError("No (valid) templates found in templates directory.");
+        this.logging.logError("No (valid) templates found in templates directory.");
       } else {
-        headerDir = 'Directory';
+        headerPath = 'Path';
         headerName = 'Template name';
         fold = function(memo, str) {
           return Math.max(memo, str.length);
         };
         lengths = {
-          dirName: _.reduce(_.keys(index), fold, headerDir.length),
+          path: _.reduce(_.keys(index), fold, headerPath.length),
           name: _.reduce(_(_(index).values()).pluck('name'), fold, headerName.length)
         };
-        headerDir = s.pad(headerDir, lengths.dirName, ' ', 'right');
-        headerName = s.pad(headerName, lengths.name + 8, ' ', 'left');
-        this.log(chalk.gray(headerDir + headerName));
+        headerName = s.pad(headerName, lengths.name, ' ', 'right');
+        headerPath = s.pad(headerPath, lengths.path + 8, ' ', 'left');
+        this.logging.log(chalk.gray(headerName + headerPath));
         templates = (function() {
           var _results;
           _results = [];
-          for (dir in index) {
-            definition = index[dir];
-            dir = s.pad(definition.dir, lengths.dirName, ' ', 'right');
-            name = s.pad(definition.name, lengths.name + 8, ' ', 'left');
-            _results.push(this.log(chalk.cyan(dir) + chalk.green(name)));
+          for (path in index) {
+            definition = index[path];
+            name = s.pad(definition.name, lengths.name, ' ', 'right');
+            path = s.pad(definition.path, lengths.path + 8, ' ', 'left');
+            _results.push(this.logging.log(chalk.green(name) + chalk.cyan(path)));
           }
           return _results;
         }).call(this);
       }
       return '';
-    };
-
-    NotaCLI.prototype.log = function(msg) {
-      return console.log(this.logPrefix + msg);
-    };
-
-    NotaCLI.prototype.logWarning = function(warningMsg) {
-      return console.warn(this.logPrefix + chalk.bgYellow.black('WARNG') + ' ' + warningMsg);
-    };
-
-    NotaCLI.prototype.logError = function(errorMsg) {
-      var _ref;
-      console.error(this.logPrefix + chalk.bgRed.black('ERROR') + ' ' + errorMsg);
-      if (((_ref = this.options) != null ? _ref.verbose : void 0) && (errorMsg.toSource != null)) {
-        return console.error(this.logPrefix + errorMsg.toSource());
-      }
-    };
-
-    NotaCLI.prototype.logEvent = function(event) {
-      return console.info(this.logPrefix + chalk.bgBlue.black('EVENT') + ' ' + event);
-    };
-
-    NotaCLI.prototype.logClient = function(msg) {
-      return console.log(this.clientPrefix + msg);
-    };
-
-    NotaCLI.prototype.logClientError = function(msg) {
-      return console.error(this.clientPrefix + chalk.bgRed.black('ERROR') + ' ' + msg);
     };
 
     return NotaCLI;
