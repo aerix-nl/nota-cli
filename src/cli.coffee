@@ -11,16 +11,12 @@ Nota          = require('nota')
 
 class NotaCLI
 
-  # Some strings that go before all logChannels (server origin and client origin respectively)
-  logPrefix:    chalk.gray('nota ')
-  clientPrefix: chalk.gray('nota-client ')
-
-  constructor: ( logChannels ) ->
-    # Allow redirecting of logging output to channels through dependency injection
-    if logChannels? then { @log, @logEvent, @logError, @logWarning } = logChannels
+  constructor: ( ) ->
+    # Direct logging output to channels with custom formatting and handling
+    @logging = new Nota.LoggingChannels(@options)
 
     # Instantiate our thrusty helping hand in template and job tasks
-    @helper = new Nota.TemplateHelper(@logWarning)
+    @helper = new Nota.TemplateHelper(@logging.logWarning)
 
     nomnom.options
       template:
@@ -54,7 +50,7 @@ class NotaCLI
         abbr: 'v'
         flag: true
         help: 'Print version'
-        callback: => @meta.version
+        callback: => Nota.meta.version
 
       resources:
         flag: true
@@ -67,32 +63,22 @@ class NotaCLI
     try
       @options = @parseOptions nomnom.nom(), Nota.defaults
     catch e
-      @logError e
+      @logging.logError e
       return
 
-    # Sum the current (command line interface) logging channels
-    logChannels = {
-      log:              @log
-      logEvent:         @logEvent
-      logWarning:       @logWarning
-      logError:         @logError
-      logClient:        @logClient
-      logClientError:   @logClientError
-    }
+    @nota = new Nota @options, @logging
 
-    @server = new Nota @options, logChannels
-
-    @server.start()
+    @nota.start()
     # We'll need to wait till all of it's components have loaded and setup is done
     .then =>
 
       if @options.preview
         # If we want a template preview, open the web page
-        open(@server.url())
+        open(@nota.server.url())
 
       if @options.listen
         # Open the webrender page where renders can be requested
-        open(@server.webrenderUrl())
+        open(@nota.server.webrenderUrl())
 
       else
         # Else, perform a single render job and close the server
@@ -107,7 +93,7 @@ class NotaCLI
       outputPath: options.outputPath
       preserve:   options.preserve
     }
-    @server.queue job
+    @nota.queue job
     .then (meta) =>
       # We're done!
 
@@ -127,7 +113,7 @@ class NotaCLI
           icon:     Path.join(__dirname, '../assets/images/icon.png')
           wait:     true
 
-      @server.close()
+      @nota.close()
       process.exit()
 
   # Settling options from parsed CLI arguments over defaults
@@ -154,7 +140,7 @@ class NotaCLI
       definition = @helper.getTemplateDefinition template
       _.extend options.template, definition
     catch e
-      @logWarning e
+      @logging.logWarning e
       # Fill the definition in with what we do know
       options.template = {
         name: options.templatePath
@@ -171,52 +157,32 @@ class NotaCLI
 
   listTemplatesIndex: ( ) =>
     templates = []
-    index = @helper.getTemplatesIndex(Nota.defaults.templatesPath)
+    basepath  = Path.resolve __dirname, '..', Nota.defaults.templatesPath
+    index     = @helper.getTemplatesIndex basepath
 
     if _.size(index) is 0
-      @logError "No (valid) templates found in templates directory."
+      @logging.logError "No (valid) templates found in templates directory."
     else
-      headerDir     = 'Directory'
+      headerPath    = 'Path'
       headerName    = 'Template name'
 
       fold = (memo, str)->
         Math.max(memo, str.length)
       lengths =
-        dirName: _.reduce _.keys(index), fold, headerDir.length
-        name:    _.reduce _(_(index).values()).pluck('name'), fold, headerName.length
+        path: _.reduce _.keys(index), fold, headerPath.length
+        name: _.reduce _(_(index).values()).pluck('name'), fold, headerName.length
 
-      headerDir     = s.pad headerDir,  lengths.dirName, ' ', 'right'
-      headerName    = s.pad headerName, lengths.name + 8, ' ', 'left'
+      headerName    = s.pad headerName, lengths.name, ' ', 'right'
+      headerPath    = s.pad headerPath, lengths.path + 8, ' ', 'left'
       # List them all in a format of: templates/hello_world 'Hello World' v1.0
 
-      @log chalk.gray(headerDir + headerName)
-      templates = for dir, definition of index
-        dir     = s.pad definition.dir,  lengths.dirName, ' ', 'right'
-        name    = s.pad definition.name, lengths.name + 8, ' ', 'left'
-        @log chalk.cyan(dir) + chalk.green(name)
+      @logging.log chalk.gray(headerName + headerPath)
+      templates = for path, definition of index
+        name    = s.pad definition.name, lengths.name, ' ', 'right'
+        path    = s.pad definition.path, lengths.path + 8, ' ', 'left'
+        @logging.log chalk.green(name) + chalk.cyan(path)
     return '' # Somehow needed to make execution stop here with --list
 
-  # Server origin logging channels
-  log: ( msg )=>
-    console.log   @logPrefix + msg
-
-  logWarning: ( warningMsg )=>
-    console.warn  @logPrefix + chalk.bgYellow.black('WARNG') + ' ' + warningMsg
-
-  logError: ( errorMsg )=>
-    console.error @logPrefix + chalk.bgRed.black('ERROR') + ' ' + errorMsg
-    if @options?.verbose and errorMsg.toSource?
-      console.error @logPrefix + errorMsg.toSource()
-
-  logEvent: ( event )=>
-    console.info  @logPrefix + chalk.bgBlue.black('EVENT') + ' ' + event
-
-  # Client origin logging channels
-  logClient: ( msg )=>
-    console.log   @clientPrefix + msg
-
-  logClientError: ( msg )=>
-    console.error @clientPrefix + chalk.bgRed.black('ERROR') + ' ' + msg
 
 notaCLI = new NotaCLI()
 module.exports = notaCLI.start()

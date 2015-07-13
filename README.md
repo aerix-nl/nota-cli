@@ -22,9 +22,11 @@ nota --template=example-invoice
 When finished Nota has rendered a simple PDF page, consisting of some custom
 rendering of preview data as declared in the template `bower.json`. Change the
 company logo image and try modifing the example data to see how easy it is to
-customise it and create your own invoice. Then render your own data with
-`--data=<path>` and set the PDF destination with `--output=<path>` and you're
-creating your own invoices!
+customise it and create your own invoice. If you have a template that needs data and you'd like to render save with a specific filename to a certain location, try this:
+```bash
+nota --template=example-invoice --data=<path> --output=<path>
+```
+
 
 #### Web interface
 Run Nota as a webservice, and create your PDF's though a friendly UI where you can upload a JSON file and get a PDF in return. Or use the REST API to expose Nota over your the interwebs or LAN (or VPN). Send a POST request with JSON, and get a PDF download in return. Try in your shell:
@@ -38,8 +40,8 @@ Develop and debug while feeling right at home in your favorite browser, with a
 programming your documents a breeze with some ready examples that
 automagically compile CoffeeScript and SASS. Try in your shell:
 ```bash
-cd templates/examples-invoice && grunt
 nota --template=example-invoice --preview
+cd templates/examples-invoice && npm install && bower install && grunt
 ```
 And you're ready to start customizing!
 
