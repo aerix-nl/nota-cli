@@ -23,7 +23,7 @@
   NotaCLI = (function() {
     function NotaCLI() {
       this.listTemplatesIndex = __bind(this.listTemplatesIndex, this);
-      this.logging = new Nota.LoggingChannels(this.options);
+      this.logging = new Nota.LoggingChannels();
       this.helper = new Nota.TemplateHelper(this.logging.logWarning);
       nomnom.options({
         template: {
@@ -94,18 +94,14 @@
         return;
       }
       this.nota = new Nota(this.options, this.logging);
-      return this.nota.start().then((function(_this) {
-        return function() {
-          if (_this.options.preview) {
-            open(_this.nota.server.url());
-          }
-          if (_this.options.listen) {
-            return open(_this.nota.server.webrenderUrl());
-          } else {
-            return _this.render(_this.options);
-          }
-        };
-      })(this));
+      if (this.options.preview) {
+        open(this.nota.server.url());
+      }
+      if (this.options.listen) {
+        return open(this.nota.webrender.url());
+      } else {
+        return this.render(this.options);
+      }
     };
 
     NotaCLI.prototype.render = function(options) {
@@ -115,7 +111,7 @@
         outputPath: options.outputPath,
         preserve: options.preserve
       };
-      return this.nota.queue(job).then((function(_this) {
+      return this.nota.queue(job, options.template).then((function(_this) {
         return function(meta) {
           if (options.logging.notify) {
             notifier.on('click', function() {
@@ -127,15 +123,13 @@
 
               }
             });
-            notifier.notify({
+            return notifier.notify({
               title: "Nota: render jobs finished",
               message: "" + meta.length + " document(s) captured to .PDF",
-              icon: Path.join(__dirname, '../assets/images/icon.png'),
+              icon: Path.join(__dirname, '../node_modules/nota/assets/images/icon.png'),
               wait: true
             });
           }
-          _this.nota.close();
-          return process.exit();
         };
       })(this));
     };
@@ -143,9 +137,6 @@
     NotaCLI.prototype.parseOptions = function(args, defaults) {
       var definition, e, options, template;
       options = _.extend({}, defaults);
-      if (options.template == null) {
-        options.template = {};
-      }
       if (args.template != null) {
         options.template.path = args.template;
       }
@@ -170,11 +161,11 @@
       if (args.resources != null) {
         options.logging.pageResources = args.resources;
       }
+      if (args.verbose != null) {
+        options.logging.verbose = args.verbose;
+      }
       if (args.preserve != null) {
         options.preserve = args.preserve;
-      }
-      if (args.verbose != null) {
-        options.verbose = args.verbose;
       }
       template = this.helper.findTemplatePath(options);
       try {
@@ -183,11 +174,7 @@
       } catch (_error) {
         e = _error;
         this.logging.logWarning(e);
-        options.template = {
-          name: options.templatePath,
-          path: templatePath
-        };
-        delete options.templatePath;
+        options.template.name = options.template.path;
       }
       options.dataPath = this.helper.findDataPath(options);
       return options;
