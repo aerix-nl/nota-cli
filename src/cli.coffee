@@ -68,14 +68,29 @@ class NotaCLI
 
     @nota = new Nota @options, @logging
 
+    # If we also want the webrender service, then we also inject up the
+    # webrenderer middelware into the server so it can intercept webrender
+    # REST API calls and server the webrender interface. After that we're
+    # ready to start it up.
+    if @options.listen
+      @webrender = new Nota.Webrender( @nota.server.app, @options, @logging )
+
+      @webrender.bind @nota.server.app
+      @webrender.start()
+
+      # Listen+preview means preview the webrender page
+      if @options.preview
+        # Open the webrender page where renders can be requested
+        open @nota.webrender.url()
+
+    @nota.start()
+
+    # Preview here means open the template with optional example data
     if @options.preview
+      @nota.server.setTemplate @options.template
+      @nota.server.setData     @options.dataPath if @options.dataPath?
       # If we want a template preview, open the web page
       open @nota.server.url()
-
-    if @options.listen
-      # Open the webrender page where renders can be requested
-      open @nota.webrender.url()
-
     else
       # Else, perform a single render job and close the server
       @render(@options)
@@ -175,4 +190,7 @@ class NotaCLI
 
 
 notaCLI = new NotaCLI()
-module.exports = notaCLI.start()
+try
+  module.exports = notaCLI.start()
+catch e
+  console.log e
