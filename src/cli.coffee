@@ -21,13 +21,14 @@ class NotaCLI
     nomnom.options
       template:
         position: 0
-        help:     'The template directory path'
+        help:     'The template directory path (only directory name needed if
+        in templates directory)'
       data:
         position: 1
         help:    'The data file path'
       output:
         position: 2
-        help:    'The output file'
+        help:    'The output filename and path (optionally)'
 
       preview:
         abbr: 'p'
@@ -36,7 +37,8 @@ class NotaCLI
       listen:
         abbr: 's'
         flag: true
-        help: 'Listen for HTTP POST requests with data to render and respond with output PDF'
+        help: 'Listen for HTTP POST requests with data to render and respond
+        with output PDF'
       list:
         abbr: 'l'
         flag: true
@@ -68,29 +70,18 @@ class NotaCLI
 
     @nota = new Nota @options, @logging
 
-    # If we also want the webrender service, then we also inject up the
-    # webrenderer middelware into the server so it can intercept webrender
-    # REST API calls and server the webrender interface. After that we're
-    # ready to start it up.
-    if @options.listen
-      @webrender = new Nota.Webrender( @nota.server.app, @options, @logging )
+    @nota.setTemplate @options.template
+    @nota.server.setData @options.dataPath if @options.dataPath?
+    @nota.start webrender: @options.listen 
 
-      @webrender.bind @nota.server.app
-      @webrender.start()
-
+    if @options.preview
       # Listen+preview means preview the webrender page
-      if @options.preview
+      if @options.listen
         # Open the webrender page where renders can be requested
         open @nota.webrender.url()
-
-    @nota.start()
-
-    # Preview here means open the template with optional example data
-    if @options.preview
-      @nota.server.setTemplate @options.template
-      @nota.server.setData     @options.dataPath if @options.dataPath?
-      # If we want a template preview, open the web page
-      open @nota.server.url()
+      else
+        # Preview here means open the template with optional example data
+        open @nota.server.url()
     else
       # Else, perform a single render job and close the server
       @render(@options)
@@ -105,8 +96,7 @@ class NotaCLI
       preserve:   options.preserve
     }
 
-    @nota.queue(job, options.template)
-    .then (meta) =>
+    @nota.queue(job, options.template).then (meta) =>
       # We're done!
 
       if options.logging.notify

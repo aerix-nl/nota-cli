@@ -28,7 +28,7 @@
       nomnom.options({
         template: {
           position: 0,
-          help: 'The template directory path'
+          help: 'The template directory path (only directory name needed if in templates directory)'
         },
         data: {
           position: 1,
@@ -36,7 +36,7 @@
         },
         output: {
           position: 2,
-          help: 'The output file'
+          help: 'The output filename and path (optionally)'
         },
         preview: {
           abbr: 'p',
@@ -94,21 +94,19 @@
         return;
       }
       this.nota = new Nota(this.options, this.logging);
-      if (this.options.listen) {
-        this.webrender = new Nota.Webrender(this.nota.server.app, this.options, this.logging);
-        this.webrender.bind(this.nota.server.app);
-        this.webrender.start();
-        if (this.options.preview) {
-          open(this.nota.webrender.url());
-        }
+      this.nota.setTemplate(this.options.template);
+      if (this.options.dataPath != null) {
+        this.nota.server.setData(this.options.dataPath);
       }
-      this.nota.start();
+      this.nota.start({
+        webrender: this.options.listen
+      });
       if (this.options.preview) {
-        this.nota.server.setTemplate(this.options.template);
-        if (this.options.dataPath != null) {
-          this.nota.server.setData(this.options.dataPath);
+        if (this.options.listen) {
+          return open(this.nota.webrender.url());
+        } else {
+          return open(this.nota.server.url());
         }
-        return open(this.nota.server.url());
       } else {
         return this.render(this.options);
       }
