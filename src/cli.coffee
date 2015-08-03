@@ -70,18 +70,24 @@ class NotaCLI
 
     @nota = new Nota @options, @logging
 
-    @nota.setTemplate @options.template
-    @nota.server.setData @options.dataPath if @options.dataPath?
     @nota.start webrender: @options.listen 
 
-    if @options.preview
-      # Listen+preview means preview the webrender page
-      if @options.listen
-        # Open the webrender page where renders can be requested
-        open @nota.webrender.url()
-      else
-        # Preview here means open the template with optional example data
-        open @nota.server.url()
+    @nota.setTemplate @options.template
+    @nota.setData     @options.dataPath if @options.dataPath?
+
+    if @options.preview and @options.listen
+      # Listen+preview means preview the webrender page. Open the 
+      # webrender page where renders can be requested.
+      open @nota.webrender.url()
+
+    else if @options.preview
+      # Preview here means open the template with optional example data
+      open @nota.server.url()
+
+    else if @options.listen
+      # Just log the address and all. No action needed.
+      @nota.webrender.logStart()
+
     else
       # Else, perform a single render job and close the server
       @render(@options)
@@ -95,7 +101,6 @@ class NotaCLI
       outputPath: options.outputPath
       preserve:   options.preserve
     }
-
     @nota.queue(job, options.template).then (meta) =>
       # We're done!
 
@@ -180,7 +185,5 @@ class NotaCLI
 
 
 notaCLI = new NotaCLI()
-try
-  module.exports = notaCLI.start()
-catch e
-  console.log e
+
+module.exports = notaCLI.start()

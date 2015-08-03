@@ -1,5 +1,5 @@
 (function() {
-  var Nota, NotaCLI, Path, chalk, e, fs, nomnom, notaCLI, notifier, open, s, _,
+  var Nota, NotaCLI, Path, chalk, fs, nomnom, notaCLI, notifier, open, s, _,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   nomnom = require('nomnom');
@@ -94,19 +94,19 @@
         return;
       }
       this.nota = new Nota(this.options, this.logging);
-      this.nota.setTemplate(this.options.template);
-      if (this.options.dataPath != null) {
-        this.nota.server.setData(this.options.dataPath);
-      }
       this.nota.start({
         webrender: this.options.listen
       });
-      if (this.options.preview) {
-        if (this.options.listen) {
-          return open(this.nota.webrender.url());
-        } else {
-          return open(this.nota.server.url());
-        }
+      this.nota.setTemplate(this.options.template);
+      if (this.options.dataPath != null) {
+        this.nota.setData(this.options.dataPath);
+      }
+      if (this.options.preview && this.options.listen) {
+        return open(this.nota.webrender.url());
+      } else if (this.options.preview) {
+        return open(this.nota.server.url());
+      } else if (this.options.listen) {
+        return this.nota.webrender.logStart();
       } else {
         return this.render(this.options);
       }
@@ -229,11 +229,6 @@
 
   notaCLI = new NotaCLI();
 
-  try {
-    module.exports = notaCLI.start();
-  } catch (_error) {
-    e = _error;
-    console.log(e);
-  }
+  module.exports = notaCLI.start();
 
 }).call(this);
