@@ -103,7 +103,6 @@ class NotaCLI
     }
     @nota.queue(job, options.template).then (meta) =>
       # We're done!
-
       if options.logging.notify
         # Would be nice if you could click on the notification
         notifier.on 'click', ->
@@ -117,14 +116,17 @@ class NotaCLI
         notifier.notify
           title:    "Nota: render jobs finished"
           message:  "#{meta.length} document(s) captured to .PDF"
-          icon:     Path.join(__dirname, '../node_modules/nota/assets/images/icon.png')
+          icon:     Path.resolve(__dirname, '..', 'node_modules/nota/assets/images/icon.png')
           wait:     true
-
-      # process.exit()
+    .finally ->
+      process.exit()
 
   # Settling options from parsed CLI arguments over defaults
   parseOptions: ( args, defaults ) ->
     options = _.extend {}, defaults
+
+    # Resolve template basepath
+    options.templatesPath = Path.resolve __dirname, '..', Nota.defaults.templatesPath
 
     # Extend with optional arguments
     options.template.path = args.template             if args.template?
@@ -157,7 +159,11 @@ class NotaCLI
 
   listTemplatesIndex: ( ) =>
     templates = []
-    basepath  = Path.resolve __dirname, '..', Nota.defaults.templatesPath
+
+    # When running with --list flag the options won't be initialized because
+    # the process exits after nomnom.nom, just before it's results would
+    # otherwise enter parseOptions as it's arguments.
+    basepath  = @options?.templatesPath or Path.resolve __dirname, '..', Nota.defaults.templatesPath
     index     = @helper.getTemplatesIndex basepath
 
     if _.size(index) is 0

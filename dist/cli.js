@@ -134,17 +134,20 @@
             return notifier.notify({
               title: "Nota: render jobs finished",
               message: "" + meta.length + " document(s) captured to .PDF",
-              icon: Path.join(__dirname, '../node_modules/nota/assets/images/icon.png'),
+              icon: Path.resolve(__dirname, '..', 'node_modules/nota/assets/images/icon.png'),
               wait: true
             });
           }
         };
-      })(this));
+      })(this))["finally"](function() {
+        return process.exit();
+      });
     };
 
     NotaCLI.prototype.parseOptions = function(args, defaults) {
       var definition, e, options, template;
       options = _.extend({}, defaults);
+      options.templatesPath = Path.resolve(__dirname, '..', Nota.defaults.templatesPath);
       if (args.template != null) {
         options.template.path = args.template;
       }
@@ -189,9 +192,9 @@
     };
 
     NotaCLI.prototype.listTemplatesIndex = function() {
-      var basepath, definition, fold, headerName, headerPath, index, lengths, name, path, templates;
+      var basepath, definition, fold, headerName, headerPath, index, lengths, name, path, templates, _ref;
       templates = [];
-      basepath = Path.resolve(__dirname, '..', Nota.defaults.templatesPath);
+      basepath = ((_ref = this.options) != null ? _ref.templatesPath : void 0) || Path.resolve(__dirname, '..', Nota.defaults.templatesPath);
       index = this.helper.getTemplatesIndex(basepath);
       if (_.size(index) === 0) {
         this.logging.logError("No (valid) templates found in templates directory.");
