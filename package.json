@@ -35,7 +35,7 @@
     "underscore.string": "3.0.2",
     "open": "0.0.3",
     "chalk": "^1.0.0",
-    "node-notifier": "4.1.2",
+    "node-notifier": "4.1.2"
 
     "nota": "aerix-nl/nota#development"
   },

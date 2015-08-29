@@ -106,7 +106,8 @@
       } else if (this.options.preview) {
         return open(this.nota.server.url());
       } else if (this.options.listen) {
-        return this.nota.webrender.logStart();
+        this.nota.webrender.logStart();
+        return this.logging.log(chalk.grey('Add ' + chalk.cyan('--preview' + chalk.grey(' to open the webrender interface in your browser'))));
       } else {
         return this.render(this.options);
       }

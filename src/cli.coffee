@@ -88,6 +88,10 @@ class NotaCLI
       # Just log the address and all. No action needed.
       @nota.webrender.logStart()
 
+      @logging.log chalk.grey 'Add ' +
+        chalk.cyan '--preview' +
+        chalk.grey ' to open the webrender interface in your browser'
+
     else
       # Else, perform a single render job and close the server
       @render(@options)
@@ -103,8 +107,12 @@ class NotaCLI
     }
     @nota.queue(job, options.template).then (meta) =>
       # We're done!
+
+      # If needed we'll create a system notification with default OS behaviour
       if options.logging.notify
-        # Would be nice if you could click on the notification
+
+        # Would be nice if you could click on the notification to open the rendered file or folder
+        # wth job output.
         notifier.on 'click', ->
           if meta.length is 1
             open meta[0].outputPath
