@@ -90,7 +90,7 @@ class NotaCLI
 
       @logging.log chalk.grey 'Add ' +
         chalk.cyan '--preview' +
-        chalk.grey ' to open the webrender interface in your browser'
+        chalk.grey ' to view the webrender interface in your browser'
 
     else
       # Else, perform a single render job and close the server
