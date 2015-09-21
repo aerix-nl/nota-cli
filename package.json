@@ -1,6 +1,6 @@
 {
   "name": "nota-cli",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Command line interface for Nota",
   "homepage": "https://github.com/aerix-nl/nota-cli",
   "license": "MIT",
@@ -36,7 +36,6 @@
     "open": "0.0.3",
     "chalk": "^1.0.0",
     "node-notifier": "4.1.2",
-
     "nota": "aerix-nl/nota#development"
   },
   "devDependencies": {
@@ -47,5 +46,5 @@
     "load-grunt-tasks": "^3.2.0"
   },
   "main": "./dist/cli.js",
-  "bin" : "./nota"
+  "bin": "./nota"
 }

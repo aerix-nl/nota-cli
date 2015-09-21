@@ -23,12 +23,12 @@
   NotaCLI = (function() {
     function NotaCLI() {
       this.listTemplatesIndex = __bind(this.listTemplatesIndex, this);
-      this.logging = new Nota.LoggingChannels(this.options);
+      this.logging = new Nota.LoggingChannels();
       this.helper = new Nota.TemplateHelper(this.logging.logWarning);
       nomnom.options({
         template: {
           position: 0,
-          help: 'The template directory path'
+          help: 'The template directory path (only directory name needed if in templates directory)'
         },
         data: {
           position: 1,
@@ -36,7 +36,7 @@
         },
         output: {
           position: 2,
-          help: 'The output file'
+          help: 'The output filename and path (optionally)'
         },
         preview: {
           abbr: 'p',
@@ -94,18 +94,23 @@
         return;
       }
       this.nota = new Nota(this.options, this.logging);
-      return this.nota.start().then((function(_this) {
-        return function() {
-          if (_this.options.preview) {
-            open(_this.nota.server.url());
-          }
-          if (_this.options.listen) {
-            return open(_this.nota.server.webrenderUrl());
-          } else {
-            return _this.render(_this.options);
-          }
-        };
-      })(this));
+      this.nota.start({
+        webrender: this.options.listen
+      });
+      this.nota.setTemplate(this.options.template);
+      if (this.options.dataPath != null) {
+        this.nota.setData(this.options.dataPath);
+      }
+      if (this.options.preview && this.options.listen) {
+        return open(this.nota.webrender.url());
+      } else if (this.options.preview) {
+        return open(this.nota.server.url());
+      } else if (this.options.listen) {
+        this.nota.webrender.logStart();
+        return this.logging.log(chalk.grey('Add ' + chalk.cyan('--preview' + chalk.grey(' to open the webrender interface in your browser'))));
+      } else {
+        return this.render(this.options);
+      }
     };
 
     NotaCLI.prototype.render = function(options) {
@@ -115,7 +120,7 @@
         outputPath: options.outputPath,
         preserve: options.preserve
       };
-      return this.nota.queue(job).then((function(_this) {
+      return this.nota.queue(job, options.template).then((function(_this) {
         return function(meta) {
           if (options.logging.notify) {
             notifier.on('click', function() {
@@ -127,25 +132,23 @@
 
               }
             });
-            notifier.notify({
+            return notifier.notify({
               title: "Nota: render jobs finished",
               message: "" + meta.length + " document(s) captured to .PDF",
-              icon: Path.join(__dirname, '../assets/images/icon.png'),
+              icon: Path.resolve(__dirname, '..', 'node_modules/nota/assets/images/icon.png'),
               wait: true
             });
           }
-          _this.nota.close();
-          return process.exit();
         };
-      })(this));
+      })(this))["finally"](function() {
+        return process.exit();
+      });
     };
 
     NotaCLI.prototype.parseOptions = function(args, defaults) {
       var definition, e, options, template;
       options = _.extend({}, defaults);
-      if (options.template == null) {
-        options.template = {};
-      }
+      options.templatesPath = Path.resolve(__dirname, '..', Nota.defaults.templatesPath);
       if (args.template != null) {
         options.template.path = args.template;
       }
@@ -170,11 +173,11 @@
       if (args.resources != null) {
         options.logging.pageResources = args.resources;
       }
+      if (args.verbose != null) {
+        options.logging.verbose = args.verbose;
+      }
       if (args.preserve != null) {
         options.preserve = args.preserve;
-      }
-      if (args.verbose != null) {
-        options.verbose = args.verbose;
       }
       template = this.helper.findTemplatePath(options);
       try {
@@ -183,20 +186,16 @@
       } catch (_error) {
         e = _error;
         this.logging.logWarning(e);
-        options.template = {
-          name: options.templatePath,
-          path: templatePath
-        };
-        delete options.templatePath;
+        options.template.name = options.template.path;
       }
       options.dataPath = this.helper.findDataPath(options);
       return options;
     };
 
     NotaCLI.prototype.listTemplatesIndex = function() {
-      var basepath, definition, fold, headerName, headerPath, index, lengths, name, path, templates;
+      var basepath, definition, fold, headerName, headerPath, index, lengths, name, path, templates, _ref;
       templates = [];
-      basepath = Path.resolve(__dirname, '..', Nota.defaults.templatesPath);
+      basepath = ((_ref = this.options) != null ? _ref.templatesPath : void 0) || Path.resolve(__dirname, '..', Nota.defaults.templatesPath);
       index = this.helper.getTemplatesIndex(basepath);
       if (_.size(index) === 0) {
         this.logging.logError("No (valid) templates found in templates directory.");
