@@ -16,7 +16,7 @@ class NotaCLI
     @logging = new Nota.LoggingChannels()
 
     # Instantiate our thrusty helping hand in template and job tasks
-    @helper = new Nota.TemplateHelper(@logging.logWarning)
+    @helper = new Nota.TemplateHelper(@logging)
 
     nomnom.options
       template:

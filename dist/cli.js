@@ -24,7 +24,7 @@
     function NotaCLI() {
       this.listTemplatesIndex = __bind(this.listTemplatesIndex, this);
       this.logging = new Nota.LoggingChannels();
-      this.helper = new Nota.TemplateHelper(this.logging.logWarning);
+      this.helper = new Nota.TemplateHelper(this.logging);
       nomnom.options({
         template: {
           position: 0,
@@ -107,7 +107,7 @@
         return open(this.nota.server.url());
       } else if (this.options.listen) {
         this.nota.webrender.logStart();
-        return this.logging.log(chalk.grey('Add ' + chalk.cyan('--preview' + chalk.grey(' to open the webrender interface in your browser'))));
+        return this.logging.log(chalk.grey('Add ' + chalk.cyan('--preview' + chalk.grey(' to view the webrender interface in your browser'))));
       } else {
         return this.render(this.options);
       }
