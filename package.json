@@ -1,6 +1,6 @@
 {
   "name": "nota-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Command line interface for Nota",
   "homepage": "https://github.com/aerix-nl/nota-cli",
   "license": "MIT",
