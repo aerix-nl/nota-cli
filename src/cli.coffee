@@ -21,7 +21,7 @@ class NotaCLI
     nomnom.options
       template:
         position: 0
-        help:     'The template directory path (only directory name needed if
+        help:     'The template name or path (only directory name needed if
         in templates directory)'
       data:
         position: 1
@@ -110,22 +110,13 @@ class NotaCLI
 
       # If needed we'll create a system notification with default OS behaviour
       if options.logging.notify
-
-        # Would be nice if you could click on the notification to open the rendered file or folder
-        # wth job output.
-        notifier.on 'click', ->
-          if meta.length is 1
-            open meta[0].outputPath
-          else if meta.length > 1
-            open Path.dirname Path.resolve meta[0].outputPath
-          else # meta = []
-
+        
         # Send notification
         notifier.notify
-          title:    "Nota: render jobs finished"
-          message:  "#{meta.length} document(s) captured to .PDF"
-          icon:     Path.resolve(__dirname, '..', 'node_modules/nota/assets/images/icon.png')
-          wait:     true
+          title:     "Nota: render jobs finished"
+          message:   "#{meta.length} document(s) captured to .PDF"
+          icon:      Path.resolve(__dirname, '..', 'node_modules/nota/assets/images/icon.png')
+          open:      Path.resolve meta[0].outputPath
     .finally ->
       process.exit()
 

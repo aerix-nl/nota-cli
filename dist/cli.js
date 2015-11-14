@@ -28,7 +28,7 @@
       nomnom.options({
         template: {
           position: 0,
-          help: 'The template directory path (only directory name needed if in templates directory)'
+          help: 'The template name or path (only directory name needed if in templates directory)'
         },
         data: {
           position: 1,
@@ -123,20 +123,11 @@
       return this.nota.queue(job, options.template).then((function(_this) {
         return function(meta) {
           if (options.logging.notify) {
-            notifier.on('click', function() {
-              if (meta.length === 1) {
-                return open(meta[0].outputPath);
-              } else if (meta.length > 1) {
-                return open(Path.dirname(Path.resolve(meta[0].outputPath)));
-              } else {
-
-              }
-            });
             return notifier.notify({
               title: "Nota: render jobs finished",
               message: "" + meta.length + " document(s) captured to .PDF",
               icon: Path.resolve(__dirname, '..', 'node_modules/nota/assets/images/icon.png'),
-              wait: true
+              open: Path.resolve(meta[0].outputPath)
             });
           }
         };

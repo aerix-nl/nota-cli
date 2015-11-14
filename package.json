@@ -30,13 +30,13 @@
     "Felix Akkermans <code@felixakkermans.com>"
   ],
   "dependencies": {
-    "nomnom": "~1.8.1",
-    "underscore": "1.6.0",
-    "underscore.string": "3.0.2",
-    "open": "0.0.3",
     "chalk": "^1.0.0",
-    "node-notifier": "4.1.2",
-    "nota": "aerix-nl/nota#development"
+    "node-notifier": "^4.3.1",
+    "nomnom": "~1.8.1",
+    "nota": "^2.0.0",
+    "open": "0.0.3",
+    "underscore": "1.6.0",
+    "underscore.string": "3.0.2"
   },
   "devDependencies": {
     "grunt": "~0.4.5",

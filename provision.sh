@@ -54,7 +54,7 @@ echo " - Installing example templates"
 git submodule update --init --recursive > /dev/null 2>&1
 
 echo " - Installing example template dependencies"
-for dir in $(ls templates); do `cd "templates/$dir"; npm install; bower install --allow-root; cd ../..`; done
+for dir in $(ls templates); do `cd "templates/$dir"; npm install; bower install; cd ../..`; done
 
 echo " "
 echo "Provisioning finished."
