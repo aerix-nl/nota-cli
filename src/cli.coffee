@@ -29,6 +29,10 @@ class NotaCLI
       output:
         position: 2
         help:    'The output filename and path (optionally)'
+      target:
+        position: 3
+        help:    'The file format build target ("pdf" or "html") if not
+        specified in file extension of output path'
 
       preview:
         abbr: 'p'
@@ -101,9 +105,10 @@ class NotaCLI
   # become more general with job arrays in the future.
   render: ( options )->
     job = {
-      dataPath:   options.dataPath
-      outputPath: options.outputPath
-      preserve:   options.preserve
+      dataPath:     options.dataPath
+      outputPath:   options.outputPath
+      buildTarget:  options.buildTarget
+      preserve:     options.preserve
     }
     @nota.queue(job, options.template).then (meta) =>
       # We're done!
@@ -131,6 +136,7 @@ class NotaCLI
     options.template.path = args.template             if args.template?
     options.dataPath = args.data                      if args.data?
     options.outputPath = args.output                  if args.output?
+    options.buildTarget = args.target                 if args.target?
     options.preview = args.preview                    if args.preview?
     options.listen = args.listen                      if args.listen?
     options.port = args.port                          if args.port?

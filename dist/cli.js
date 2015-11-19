@@ -38,6 +38,10 @@
           position: 2,
           help: 'The output filename and path (optionally)'
         },
+        target: {
+          position: 3,
+          help: 'The file format build target ("pdf" or "html") if not specified in file extension of output path'
+        },
         preview: {
           abbr: 'p',
           flag: true,
@@ -118,6 +122,7 @@
       job = {
         dataPath: options.dataPath,
         outputPath: options.outputPath,
+        buildTarget: options.buildTarget,
         preserve: options.preserve
       };
       return this.nota.queue(job, options.template).then((function(_this) {
@@ -148,6 +153,9 @@
       }
       if (args.output != null) {
         options.outputPath = args.output;
+      }
+      if (args.target != null) {
+        options.buildTarget = args.target;
       }
       if (args.preview != null) {
         options.preview = args.preview;
