@@ -74,13 +74,13 @@ class NotaCLI
 
     @nota = new Nota @options, @logging
 
-    @nota.start webrender: @options.listen 
+    @nota.start webrender: @options.listen
 
-    @nota.setTemplate @options.template
-    @nota.setData     @options.dataPath if @options.dataPath?
+    @nota.setTemplate     @options.template
+    @nota.server.setData  @options.dataPath if @options.dataPath?
 
     if @options.preview and @options.listen
-      # Listen+preview means preview the webrender page. Open the 
+      # Listen+preview means preview the webrender page. Open the
       # webrender page where renders can be requested.
       open @nota.webrender.url()
 
@@ -112,6 +112,11 @@ class NotaCLI
     }
     @nota.queue(job, options.template).then (meta) =>
       # We're done!
+      if not meta[0].fail?
+        @logging.log "Job duration: #{(meta[0].duration / 1000).toFixed(2)} seconds"
+        @logging.log "Output path: #{Path.resolve meta[0].outputPath}"
+      else
+        @logging.log "Job failed:\n#{meta[0].fail}"
 
       # If needed we'll create a system notification with default OS behaviour
       if options.logging.notify
@@ -120,7 +125,8 @@ class NotaCLI
         notifier.notify
           title:     "Nota: render jobs finished"
           message:   "#{meta.length} document(s) captured to .PDF"
-          icon:      Path.resolve(__dirname, '..', 'node_modules/nota/assets/images/icon.png')
+          icon:      Path.resolve(__dirname, '..',
+          'node_modules/nota/assets/images/icon.png')
           open:      Path.resolve meta[0].outputPath
     .finally ->
       process.exit()

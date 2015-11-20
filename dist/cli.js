@@ -103,7 +103,7 @@
       });
       this.nota.setTemplate(this.options.template);
       if (this.options.dataPath != null) {
-        this.nota.setData(this.options.dataPath);
+        this.nota.server.setData(this.options.dataPath);
       }
       if (this.options.preview && this.options.listen) {
         return open(this.nota.webrender.url());
@@ -127,6 +127,12 @@
       };
       return this.nota.queue(job, options.template).then((function(_this) {
         return function(meta) {
+          if (meta[0].fail == null) {
+            _this.logging.log("Job duration: " + ((meta[0].duration / 1000).toFixed(2)) + " seconds");
+            _this.logging.log("Output path: " + (Path.resolve(meta[0].outputPath)));
+          } else {
+            _this.logging.log("Job failed:\n" + meta[0].fail);
+          }
           if (options.logging.notify) {
             return notifier.notify({
               title: "Nota: render jobs finished",
