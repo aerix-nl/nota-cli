@@ -36,7 +36,8 @@
     "nota": "^2.0.0",
     "open": "0.0.3",
     "underscore": "1.6.0",
-    "underscore.string": "3.0.2"
+    "underscore.string": "3.0.2",
+    "weak": "^1.0.1"
   },
   "devDependencies": {
     "grunt": "~0.4.5",
